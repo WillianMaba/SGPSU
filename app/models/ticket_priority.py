@@ -1,7 +1,11 @@
 from datetime import datetime
 from sqlalchemy import Boolean, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.ticket import Ticket
 
 
 class TicketPriority(Base):
@@ -33,4 +37,9 @@ class TicketPriority(Base):
         DateTime(timezone=True),
         nullable=False,
         default=datetime.utcnow,
+    )
+    
+    tickets: Mapped[list["Ticket"]] = relationship(
+        "Ticket",
+        back_populates="priority",
     )

@@ -4,6 +4,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 from app.models.sector import Sector
 from app.models.profile import Profile
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.ticket import Ticket
 
 class User(Base):
     __tablename__ = "users"
@@ -59,4 +63,16 @@ class User(Base):
     profile: Mapped["Profile"] = relationship(
         "Profile",
         back_populates="users",
+    )
+    
+    requested_tickets: Mapped[list["Ticket"]] = relationship(
+        "Ticket",
+        foreign_keys="Ticket.requester_id",
+        back_populates="requester",
+    )
+
+    assigned_tickets: Mapped[list["Ticket"]] = relationship(
+        "Ticket",
+        foreign_keys="Ticket.assignee_id",
+        back_populates="assignee",
     )

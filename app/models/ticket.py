@@ -1,7 +1,14 @@
 from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.ticket_status import TicketStatus
+    from app.models.ticket_priority import TicketPriority
+    from app.models.ticket_category import TicketCategory
 
 
 class Ticket(Base):
@@ -58,4 +65,31 @@ class Ticket(Base):
         nullable=False,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
+    )
+    
+    status: Mapped["TicketStatus"] = relationship(
+        "TicketStatus",
+        back_populates="tickets",
+    )
+
+    priority: Mapped["TicketPriority"] = relationship(
+        "TicketPriority",
+        back_populates="tickets",
+    )
+
+    category: Mapped["TicketCategory"] = relationship(
+        "TicketCategory",
+        back_populates="tickets",
+    )
+
+    requester: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[requester_id],
+        back_populates="requested_tickets",
+    )
+
+    assignee: Mapped["User | None"] = relationship(
+        "User",
+        foreign_keys=[assignee_id],
+        back_populates="assigned_tickets",
     )

@@ -7,3 +7,4 @@ from app.models.ticket_status import TicketStatus
 from app.models.ticket_priority import TicketPriority
 from app.models.ticket_category import TicketCategory
 from app.models.ticket import Ticket
+from app.models.ticket_comment import TicketComment
