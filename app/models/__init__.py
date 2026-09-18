@@ -6,4 +6,4 @@ from app.models.profile_permission import ProfilePermission
 from app.models.ticket_status import TicketStatus
 from app.models.ticket_priority import TicketPriority
 from app.models.ticket_category import TicketCategory
-
+from app.models.ticket import Ticket
