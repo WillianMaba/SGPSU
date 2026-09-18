@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from app.models.ticket_status import TicketStatus
     from app.models.ticket_priority import TicketPriority
     from app.models.ticket_category import TicketCategory
-
+    from app.models.ticket_comment import TicketComment
 
 class Ticket(Base):
     __tablename__ = "tickets"
@@ -92,4 +92,9 @@ class Ticket(Base):
         "User",
         foreign_keys=[assignee_id],
         back_populates="assigned_tickets",
+    )
+
+    comments: Mapped[list["TicketComment"]] = relationship(
+        "TicketComment",
+        back_populates="ticket",
     )

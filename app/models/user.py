@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.ticket import Ticket
+    from app.models.ticket_comment import TicketComment
 
 class User(Base):
     __tablename__ = "users"
@@ -75,4 +76,9 @@ class User(Base):
         "Ticket",
         foreign_keys="Ticket.assignee_id",
         back_populates="assignee",
+    )
+    
+    ticket_comments: Mapped[list["TicketComment"]] = relationship(
+        "TicketComment",    
+    back_populates="user",
     )
