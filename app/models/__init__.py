@@ -3,3 +3,7 @@ from app.models.sector import Sector
 from app.models.profile import Profile
 from app.models.permission import Permission
 from app.models.profile_permission import ProfilePermission
+from app.models.ticket_status import TicketStatus
+from app.models.ticket_priority import TicketPriority
+from app.models.ticket_category import TicketCategory
+
