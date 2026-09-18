@@ -9,3 +9,4 @@ from app.models.ticket_category import TicketCategory
 from app.models.ticket import Ticket
 from app.models.ticket_comment import TicketComment
 from app.models.ticket_history import TicketHistory
+from app.models.ticket_attachment import TicketAttachment
