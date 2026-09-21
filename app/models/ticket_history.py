@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 from typing import TYPE_CHECKING
 
@@ -41,4 +41,14 @@ class TicketHistory(Base):
         DateTime(timezone=True),
         nullable=False,
         default=datetime.utcnow,
+    )
+    
+    ticket: Mapped["Ticket"] = relationship(
+        "Ticket",
+        back_populates="history",
+    )
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="ticket_history",
     )

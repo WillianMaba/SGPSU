@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.ticket import Ticket
     from app.models.ticket_comment import TicketComment
+    from app.models.ticket_attachment import TicketAttachment
+    from app.models.ticket_history import TicketHistory
 
 class User(Base):
     __tablename__ = "users"
@@ -81,4 +83,14 @@ class User(Base):
     ticket_comments: Mapped[list["TicketComment"]] = relationship(
         "TicketComment",    
     back_populates="user",
+    )
+    
+    ticket_attachments: Mapped[list["TicketAttachment"]] = relationship(
+        "TicketAttachment",
+        back_populates="user",
+    )
+    
+    ticket_history: Mapped[list["TicketHistory"]] = relationship(
+        "TicketHistory",
+        back_populates="user",
     )

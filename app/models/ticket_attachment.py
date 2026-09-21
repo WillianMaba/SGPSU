@@ -1,7 +1,12 @@
 from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.ticket import Ticket  # noqa: F401
+    from app.models.user import User  # noqa: F401
 
 
 class TicketAttachment(Base):
@@ -46,4 +51,14 @@ class TicketAttachment(Base):
         DateTime(timezone=True),
         nullable=False,
         default=datetime.utcnow,
+    )
+    
+    ticket: Mapped["Ticket"] = relationship(
+        "Ticket",
+        back_populates="attachments",
+    )
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="ticket_attachments",
     )

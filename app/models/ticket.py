@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from app.models.ticket_priority import TicketPriority
     from app.models.ticket_category import TicketCategory
     from app.models.ticket_comment import TicketComment
+    from app.models.ticket_attachment import TicketAttachment
+    from app.models.ticket_history import TicketHistory
 
 class Ticket(Base):
     __tablename__ = "tickets"
@@ -96,5 +98,15 @@ class Ticket(Base):
 
     comments: Mapped[list["TicketComment"]] = relationship(
         "TicketComment",
+        back_populates="ticket",
+    )
+    
+    attachments: Mapped[list["TicketAttachment"]] = relationship(
+        "TicketAttachment",
+        back_populates="ticket",
+    )
+    
+    history: Mapped[list["TicketHistory"]] = relationship(
+        "TicketHistory",
         back_populates="ticket",
     )
