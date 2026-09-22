@@ -11,3 +11,9 @@ from app.models.ticket_comment import TicketComment
 from app.models.ticket_history import TicketHistory
 from app.models.ticket_attachment import TicketAttachment
 from app.models.audit_log import AuditLog
+from app.models.process_type import ProcessType
+from app.models.process_status import ProcessStatus
+from app.models.process import Process
+from app.models.process_stage import ProcessStage
+from app.models.process_progress import ProcessProgress
+from app.models.task import Task

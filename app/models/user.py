@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from app.models.ticket_comment import TicketComment
     from app.models.ticket_attachment import TicketAttachment
     from app.models.ticket_history import TicketHistory
+    from app.models.process import Process
+    from app.models.process_progress import ProcessProgress
+    from app.models.process_stage import ProcessStage
+    from app.models.task import Task
 
 class User(Base):
     __tablename__ = "users"
@@ -93,4 +97,33 @@ class User(Base):
     ticket_history: Mapped[list["TicketHistory"]] = relationship(
         "TicketHistory",
         back_populates="user",
+    )
+    
+    created_processes: Mapped[list["Process"]] = relationship(
+    "Process",
+    foreign_keys="Process.created_by_id",
+    back_populates="created_by",
+    )
+
+    responsible_processes: Mapped[list["Process"]] = relationship(
+        "Process",
+        foreign_keys="Process.responsible_id",
+        back_populates="responsible",
+    )
+
+    process_stages: Mapped[list["ProcessStage"]] = relationship(
+        "ProcessStage",
+        foreign_keys="ProcessStage.responsible_id",
+        back_populates="responsible",
+    )
+
+    process_progress_entries: Mapped[list["ProcessProgress"]] = relationship(
+        "ProcessProgress",
+        back_populates="user",
+    )
+
+    assigned_tasks: Mapped[list["Task"]] = relationship(
+        "Task",
+        foreign_keys="Task.assigned_to_id",
+        back_populates="assigned_to",
     )
