@@ -15,6 +15,10 @@ if TYPE_CHECKING:
     from app.models.process_progress import ProcessProgress
     from app.models.process_stage import ProcessStage
     from app.models.task import Task
+    from app.models.document import Document
+    from app.models.document_version import DocumentVersion
+    from app.models.file import File
+    from app.models.file_version import FileVersion
 
 class User(Base):
     __tablename__ = "users"
@@ -126,4 +130,28 @@ class User(Base):
         "Task",
         foreign_keys="Task.assigned_to_id",
         back_populates="assigned_to",
+    )
+    
+    created_documents: Mapped[list["Document"]] = relationship(
+        "Document",
+        foreign_keys="Document.created_by_id",
+        back_populates="created_by",
+    )
+
+    created_document_versions: Mapped[list["DocumentVersion"]] = relationship(
+        "DocumentVersion",
+        foreign_keys="DocumentVersion.created_by_id",
+        back_populates="created_by",
+    )
+
+    created_files: Mapped[list["File"]] = relationship(
+        "File",
+        foreign_keys="File.created_by_id",
+        back_populates="created_by",
+    )
+
+    created_file_versions: Mapped[list["FileVersion"]] = relationship(
+        "FileVersion",
+        foreign_keys="FileVersion.created_by_id",
+        back_populates="created_by",
     )

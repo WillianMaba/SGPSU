@@ -17,3 +17,9 @@ from app.models.process import Process
 from app.models.process_stage import ProcessStage
 from app.models.process_progress import ProcessProgress
 from app.models.task import Task
+from app.models.repository import Repository
+from app.models.folder import Folder
+from app.models.file import File
+from app.models.file_version import FileVersion
+from app.models.document import Document
+from app.models.document_version import DocumentVersion
