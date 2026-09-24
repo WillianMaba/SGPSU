@@ -23,3 +23,9 @@ from app.models.file import File
 from app.models.file_version import FileVersion
 from app.models.document import Document
 from app.models.document_version import DocumentVersion
+from app.models.request_status import RequestStatus
+from app.models.request import Request
+from app.models.access_request import AccessRequest
+from app.models.access_resource import AccessResource
+from app.models.access_request_resource import AccessRequestResource
+from app.models.access_grant import AccessGrant

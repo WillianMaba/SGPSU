@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from app.models.document_version import DocumentVersion
     from app.models.file import File
     from app.models.file_version import FileVersion
+    from app.models.access_grant import AccessGrant
+    from app.models.request import Request
 
 class User(Base):
     __tablename__ = "users"
@@ -154,4 +156,16 @@ class User(Base):
         "FileVersion",
         foreign_keys="FileVersion.created_by_id",
         back_populates="created_by",
+    )
+    
+    requested_requests: Mapped[list["Request"]] = relationship(
+        "Request",
+        foreign_keys="Request.requester_id",
+        back_populates="requester",
+    )
+
+    access_grants: Mapped[list["AccessGrant"]] = relationship(
+        "AccessGrant",
+        foreign_keys="AccessGrant.granted_by_id",
+        back_populates="granted_by",
     )
