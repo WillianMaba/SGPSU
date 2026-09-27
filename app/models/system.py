@@ -5,12 +5,11 @@ from app.models.base import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.models.folder import Folder
-    from app.models.repository_access import RepositoryAccess
+    from app.models.system_module import SystemModule
 
 
-class Repository(Base):
-    __tablename__ = "file_repositories"
+class System(Base):
+    __tablename__ = "systems"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
@@ -40,12 +39,7 @@ class Repository(Base):
         default=datetime.utcnow,
     )
 
-    folders: Mapped[list["Folder"]] = relationship(
-        "Folder",
-        back_populates="repository",
-    )
-    
-    access_rules: Mapped[list["RepositoryAccess"]] = relationship(
-        "RepositoryAccess",
-        back_populates="repository",
+    modules: Mapped[list["SystemModule"]] = relationship(
+        "SystemModule",
+        back_populates="system",
     )

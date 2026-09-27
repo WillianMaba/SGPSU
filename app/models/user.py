@@ -21,6 +21,9 @@ if TYPE_CHECKING:
     from app.models.file_version import FileVersion
     from app.models.access_grant import AccessGrant
     from app.models.request import Request
+    from app.models.file_access import FileAccess
+    from app.models.folder_access import FolderAccess
+    from app.models.repository_access import RepositoryAccess
 
 class User(Base):
     __tablename__ = "users"
@@ -168,4 +171,22 @@ class User(Base):
         "AccessGrant",
         foreign_keys="AccessGrant.granted_by_id",
         back_populates="granted_by",
+    )
+    
+    repository_accesses: Mapped[list["RepositoryAccess"]] = relationship(
+        "RepositoryAccess",
+        foreign_keys="RepositoryAccess.user_id",
+        back_populates="user",
+    )
+
+    folder_accesses: Mapped[list["FolderAccess"]] = relationship(
+        "FolderAccess",
+        foreign_keys="FolderAccess.user_id",
+        back_populates="user",
+    )
+
+    file_accesses: Mapped[list["FileAccess"]] = relationship(
+        "FileAccess",
+        foreign_keys="FileAccess.user_id",
+        back_populates="user",
     )

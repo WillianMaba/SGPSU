@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.file_access import FileAccess
+    from app.models.folder_access import FolderAccess
+    from app.models.repository_access import RepositoryAccess
 
 class Sector(Base):
     __tablename__ = "sectors"
@@ -40,5 +43,23 @@ class Sector(Base):
     
     users: Mapped[list["User"]] = relationship(
         "User",
+        back_populates="sector",
+    )
+    
+    repository_accesses: Mapped[list["RepositoryAccess"]] = relationship(
+        "RepositoryAccess",
+        foreign_keys="RepositoryAccess.sector_id",
+        back_populates="sector",
+    )
+
+    folder_accesses: Mapped[list["FolderAccess"]] = relationship(
+        "FolderAccess",
+        foreign_keys="FolderAccess.sector_id",
+        back_populates="sector",
+    )
+
+    file_accesses: Mapped[list["FileAccess"]] = relationship(
+        "FileAccess",
+        foreign_keys="FileAccess.sector_id",
         back_populates="sector",
     )

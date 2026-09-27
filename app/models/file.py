@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.file_version import FileVersion
     from app.models.folder import Folder
     from app.models.user import User
+    from app.models.file_access import FileAccess
 
 
 class File(Base):
@@ -98,5 +99,10 @@ class File(Base):
 
     versions: Mapped[list["FileVersion"]] = relationship(
         "FileVersion",
+        back_populates="file",
+    )
+    
+    access_rules: Mapped[list["FileAccess"]] = relationship(
+        "FileAccess",
         back_populates="file",
     )

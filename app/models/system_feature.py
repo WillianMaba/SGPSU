@@ -1,37 +1,42 @@
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.models.folder import Folder
-    from app.models.repository_access import RepositoryAccess
+    from app.models.system_module import SystemModule
 
 
-class Repository(Base):
-    __tablename__ = "file_repositories"
+class SystemFeature(Base):
+    __tablename__ = "system_features"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "module_id",
+            "name",
+            name="uq_system_features_module_name",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
     )
 
+    module_id: Mapped[int] = mapped_column(
+        ForeignKey("system_modules.id"),
+        nullable=False,
+    )
+
     name: Mapped[str] = mapped_column(
         String(150),
         nullable=False,
-        unique=True,
     )
 
     description: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True,
-    )
-
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -40,12 +45,7 @@ class Repository(Base):
         default=datetime.utcnow,
     )
 
-    folders: Mapped[list["Folder"]] = relationship(
-        "Folder",
-        back_populates="repository",
-    )
-    
-    access_rules: Mapped[list["RepositoryAccess"]] = relationship(
-        "RepositoryAccess",
-        back_populates="repository",
+    module: Mapped["SystemModule"] = relationship(
+        "SystemModule",
+        back_populates="features",
     )

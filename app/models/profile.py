@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.file_access import FileAccess
+    from app.models.folder_access import FolderAccess
+    from app.models.repository_access import RepositoryAccess
 
 class Profile(Base):
     __tablename__ = "profiles"
@@ -49,3 +52,20 @@ class Profile(Base):
         back_populates="profiles",
     )
     
+    repository_accesses: Mapped[list["RepositoryAccess"]] = relationship(
+        "RepositoryAccess",
+        foreign_keys="RepositoryAccess.profile_id",
+        back_populates="profile",
+    )
+
+    folder_accesses: Mapped[list["FolderAccess"]] = relationship(
+        "FolderAccess",
+        foreign_keys="FolderAccess.profile_id",
+        back_populates="profile",
+    )
+
+    file_accesses: Mapped[list["FileAccess"]] = relationship(
+        "FileAccess",
+        foreign_keys="FileAccess.profile_id",
+        back_populates="profile",
+    )

@@ -29,3 +29,9 @@ from app.models.access_request import AccessRequest
 from app.models.access_resource import AccessResource
 from app.models.access_request_resource import AccessRequestResource
 from app.models.access_grant import AccessGrant
+from app.models.system import System
+from app.models.system_module import SystemModule
+from app.models.system_feature import SystemFeature
+from app.models.repository_access import RepositoryAccess
+from app.models.folder_access import FolderAccess
+from app.models.file_access import FileAccess

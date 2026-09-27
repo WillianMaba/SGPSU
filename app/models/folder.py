@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.file import File
     from app.models.repository import Repository
+    from app.models.folder_access import FolderAccess
 
 
 class Folder(Base):
@@ -92,5 +93,10 @@ class Folder(Base):
 
     files: Mapped[list["File"]] = relationship(
         "File",
+        back_populates="folder",
+    )
+    
+    access_rules: Mapped[list["FolderAccess"]] = relationship(
+        "FolderAccess",
         back_populates="folder",
     )
