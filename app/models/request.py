@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from app.models.access_request import AccessRequest
     from app.models.request_status import RequestStatus
     from app.models.user import User
+    from app.models.approval import Approval
 
 
 class Request(Base):
@@ -72,4 +73,9 @@ class Request(Base):
         "AccessRequest",
         back_populates="request",
         uselist=False,
+    )
+    
+    approvals: Mapped[list["Approval"]] = relationship(
+        "Approval",
+        back_populates="request",
     )

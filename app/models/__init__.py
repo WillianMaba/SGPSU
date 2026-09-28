@@ -35,3 +35,7 @@ from app.models.system_feature import SystemFeature
 from app.models.repository_access import RepositoryAccess
 from app.models.folder_access import FolderAccess
 from app.models.file_access import FileAccess
+from app.models.process_stage_history import ProcessStageHistory
+from app.models.process_document import ProcessDocument
+from app.models.approval import Approval
+from app.models.notification import Notification

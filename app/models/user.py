@@ -24,6 +24,10 @@ if TYPE_CHECKING:
     from app.models.file_access import FileAccess
     from app.models.folder_access import FolderAccess
     from app.models.repository_access import RepositoryAccess
+    from app.models.approval import Approval
+    from app.models.notification import Notification
+    from app.models.process_stage_history import ProcessStageHistory
+    from app.models.process_document import ProcessDocument
 
 class User(Base):
     __tablename__ = "users"
@@ -188,5 +192,27 @@ class User(Base):
     file_accesses: Mapped[list["FileAccess"]] = relationship(
         "FileAccess",
         foreign_keys="FileAccess.user_id",
+        back_populates="user",
+    )
+    
+    process_stage_history: Mapped[list["ProcessStageHistory"]] = relationship(
+        "ProcessStageHistory",
+        back_populates="user",
+    )
+
+    linked_process_documents: Mapped[list["ProcessDocument"]] = relationship(
+        "ProcessDocument",
+        foreign_keys="ProcessDocument.linked_by_id",
+        back_populates="linked_by",
+    )
+
+    approvals: Mapped[list["Approval"]] = relationship(
+        "Approval",
+        foreign_keys="Approval.approver_id",
+        back_populates="approver",
+    )
+
+    notifications: Mapped[list["Notification"]] = relationship(
+        "Notification",
         back_populates="user",
     )

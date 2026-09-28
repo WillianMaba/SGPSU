@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.process import Process
     from app.models.user import User
+    from app.models.process_stage_history import ProcessStageHistory
 
 
 class ProcessStage(Base):
@@ -73,4 +74,9 @@ class ProcessStage(Base):
         "User",
         foreign_keys=[responsible_id],
         back_populates="process_stages",
+    )
+    
+    history_entries: Mapped[list["ProcessStageHistory"]] = relationship(
+        "ProcessStageHistory",
+        back_populates="process_stage",
     )

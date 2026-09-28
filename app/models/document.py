@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.document_version import DocumentVersion
     from app.models.user import User
+    from app.models.process_document import ProcessDocument
 
 
 class Document(Base):
@@ -64,5 +65,10 @@ class Document(Base):
 
     versions: Mapped[list["DocumentVersion"]] = relationship(
         "DocumentVersion",
+        back_populates="document",
+    )
+    
+    processes: Mapped[list["ProcessDocument"]] = relationship(
+        "ProcessDocument",
         back_populates="document",
     )

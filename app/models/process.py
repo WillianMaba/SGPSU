@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from app.models.process_type import ProcessType
     from app.models.task import Task
     from app.models.user import User
+    from app.models.approval import Approval
+    from app.models.process_document import ProcessDocument
 
 
 class Process(Base):
@@ -104,5 +106,15 @@ class Process(Base):
 
     tasks: Mapped[list["Task"]] = relationship(
         "Task",
+        back_populates="process",
+    )
+    
+    documents: Mapped[list["ProcessDocument"]] = relationship(
+        "ProcessDocument",
+        back_populates="process",
+    )
+
+    approvals: Mapped[list["Approval"]] = relationship(
+        "Approval",
         back_populates="process",
     )
