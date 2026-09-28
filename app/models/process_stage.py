@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
+from sqlalchemy import UniqueConstraint
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,6 +10,14 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.process_stage_history import ProcessStageHistory
 
+
+__table_args__ = (
+    UniqueConstraint(
+        "process_id",
+        "sequence",
+        name="uq_process_stages_process_sequence",
+    ),
+)
 
 class ProcessStage(Base):
     __tablename__ = "process_stages"

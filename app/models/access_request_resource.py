@@ -3,6 +3,7 @@ from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
+from sqlalchemy import UniqueConstraint
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,6 +11,13 @@ if TYPE_CHECKING:
     from app.models.access_request import AccessRequest
     from app.models.access_resource import AccessResource
 
+__table_args__ = (
+    UniqueConstraint(
+        "access_request_id",
+        "access_resource_id",
+        name="uq_access_request_resources_request_resource",
+    ),
+)
 
 class AccessRequestResource(Base):
     __tablename__ = "access_request_resources"
