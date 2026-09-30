@@ -3,6 +3,7 @@ from app.core.security import hash_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserUpdate
+from app.core.security import verify_password
 
 
 class UserAlreadyExistsError(Exception):
@@ -76,3 +77,33 @@ class UserService:
         return self.repository.deactivate(
             user,
         )
+        
+    class InvalidCredentialsError(Exception):
+        """Raised when the provided credentials are invalid."""   
+    
+        def authenticate_user(
+        self,
+        email: str,
+        password: str,
+    ) -> User:
+        user = self.repository.get_by_email(email)
+
+        if user is None:
+            raise InvalidCredentialsError(
+                "Credenciais invalidas."
+            )
+
+        if not user.is_active:
+            raise InvalidCredentialsError(
+                "Credenciais invalidas."
+            )
+
+        if not verify_password(
+            password,
+            user.password_hash,
+        ):
+            raise InvalidCredentialsError(
+                "Credenciais invalidas."
+            )
+
+        return user
