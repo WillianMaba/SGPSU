@@ -1,48 +1,40 @@
 from sqlalchemy.orm import Session
-from app.core.security import hash_password
+
+from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserUpdate
-from app.core.security import verify_password
 
 
 class UserAlreadyExistsError(Exception):
-    """Raised when an user with the same email already exists."""
+    pass
+
+
+class InvalidCredentialsError(Exception):
+    pass
 
 
 class UserService:
     def __init__(self, db: Session):
         self.repository = UserRepository(db)
 
-    def create_user(
-        self,
-        data: UserCreate,
-    ) -> User:
-        existing_user = self.repository.get_by_email(
-            str(data.email),
-        )
+    def create_user(self, data: UserCreate) -> User:
+        existing_user = self.repository.get_by_email(str(data.email))
 
         if existing_user is not None:
             raise UserAlreadyExistsError(
                 "Ja existe um usuario com este e-mail."
             )
 
-        password_hash = hash_password(
-            data.password,
-        )
+        password_hash_value = hash_password(data.password)
 
         return self.repository.create(
             data=data,
-            password_hash=password_hash,
+            password_hash=password_hash_value,
         )
 
-    def get_user(
-        self,
-        user_id: int,
-    ) -> User | None:
-        return self.repository.get_by_id(
-            user_id,
-        )
+    def get_user(self, user_id: int) -> User | None:
+        return self.repository.get_by_id(user_id)
 
     def get_users(self) -> list[User]:
         return self.repository.list()
@@ -52,15 +44,13 @@ class UserService:
         user: User,
         data: UserUpdate,
     ) -> User:
+
         if data.email is not None:
             existing_user = self.repository.get_by_email(
-                str(data.email),
+                str(data.email)
             )
 
-            if (
-                existing_user is not None
-                and existing_user.id != user.id
-            ):
+            if existing_user is not None and existing_user.id != user.id:
                 raise UserAlreadyExistsError(
                     "Ja existe outro usuario com este e-mail."
                 )
@@ -70,22 +60,15 @@ class UserService:
             data=data,
         )
 
-    def deactivate_user(
-        self,
-        user: User,
-    ) -> User:
-        return self.repository.deactivate(
-            user,
-        )
-        
-    class InvalidCredentialsError(Exception):
-        """Raised when the provided credentials are invalid."""   
-    
-        def authenticate_user(
+    def deactivate_user(self, user: User) -> User:
+        return self.repository.deactivate(user)
+
+    def authenticate_user(
         self,
         email: str,
         password: str,
     ) -> User:
+
         user = self.repository.get_by_email(email)
 
         if user is None:

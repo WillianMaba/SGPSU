@@ -1,19 +1,15 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from app.core.security import (
-    create_access_token,
-    decode_access_token,
-)
-from app.db.session import get_db
-from app.schemas.auth import Token
-from app.services.user_service import (
-    InvalidCredentialsError,
-    UserService,
-)
 from jwt.exceptions import InvalidTokenError
+from sqlalchemy.orm import Session
+
+from app.core.security import create_access_token, decode_access_token
+from app.db.session import get_db
 from app.models.user import User
+from app.schemas.auth import Token
+from app.services.user_service import InvalidCredentialsError, UserService
 
 
 router = APIRouter(
@@ -32,10 +28,7 @@ oauth2_scheme = OAuth2PasswordBearer(
     response_model=Token,
 )
 def login(
-    form_data: Annotated[
-        OAuth2PasswordRequestForm,
-        Depends(),
-    ],
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
 ) -> Token:
     service = UserService(db)
@@ -49,9 +42,7 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
-            headers={
-                "WWW-Authenticate": "Bearer",
-            },
+            headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
     access_token = create_access_token(
@@ -62,20 +53,17 @@ def login(
         access_token=access_token,
         token_type="bearer",
     )
-    
-    def get_current_user(
-    token: Annotated[
-        str,
-        Depends(oauth2_scheme),
-    ],
+
+
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
     db: Session = Depends(get_db),
 ) -> User:
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Nao foi possivel validar as credenciais.",
-        headers={
-            "WWW-Authenticate": "Bearer",
-        },
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
     try:
@@ -88,11 +76,7 @@ def login(
 
         user_id = int(subject)
 
-    except (
-        InvalidTokenError,
-        ValueError,
-        TypeError,
-    ) as exc:
+    except (InvalidTokenError, ValueError, TypeError) as exc:
         raise credentials_exception from exc
 
     user = UserService(db).get_user(user_id)
@@ -101,3 +85,14 @@ def login(
         raise credentials_exception
 
     return user
+
+
+@router.get("/me")
+def get_me(
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+    }
