@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-
-from app.api.routes.auth import get_current_user
+from app.core.authorization import require_permission
+from app.core.permissions import PermissionNames
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -27,11 +27,13 @@ def create_user(
     data: UserCreate,
     db: Session = Depends(get_db),
 ) -> User:
+
     service = UserService(db)
 
     try:
         user = service.create_user(data)
         db.commit()
+
         return user
 
     except UserAlreadyExistsError as exc:
@@ -57,11 +59,12 @@ def create_user(
 )
 def list_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_permission(PermissionNames.USERS_READ)
+    ),
 ) -> list[User]:
-    service = UserService(db)
 
-    return service.get_users()
+    return UserService(db).get_users()
 
 
 @router.get(
@@ -71,11 +74,12 @@ def list_users(
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_permission(PermissionNames.USERS_READ)
+    ),
 ) -> User:
-    service = UserService(db)
 
-    user = service.get_user(user_id)
+    user = UserService(db).get_user(user_id)
 
     if user is None:
         raise HTTPException(
@@ -94,8 +98,11 @@ def update_user(
     user_id: int,
     data: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_permission(PermissionNames.USERS_UPDATE)
+    ),
 ) -> User:
+
     service = UserService(db)
 
     user = service.get_user(user_id)
@@ -140,8 +147,11 @@ def update_user(
 def deactivate_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_permission(PermissionNames.USERS_DELETE)
+    ),
 ) -> User:
+
     service = UserService(db)
 
     user = service.get_user(user_id)
