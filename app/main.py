@@ -5,6 +5,10 @@ from app.api.routes.users import router as users_router
 from app.api.routes.sectors import router as sectors_router
 from app.api.routes.profiles import router as profiles_router
 from app.core.database import engine
+from app.api.routes.permissions import router as permissions_router
+from app.api.routes.profile_permissions import (
+    router as profile_permissions_router,
+)
 
 
 app = FastAPI(
@@ -18,6 +22,8 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(sectors_router)
 app.include_router(profiles_router)
+app.include_router(permissions_router)
+app.include_router(profile_permissions_router)
 
 
 @app.get("/")

@@ -13,3 +13,11 @@ class PermissionNames:
     PROFILES_CREATE = "profiles.create"
     PROFILES_UPDATE = "profiles.update"
     PROFILES_DELETE = "profiles.delete"
+
+    PERMISSIONS_READ = "permissions.read"
+    PERMISSIONS_CREATE = "permissions.create"
+    PERMISSIONS_UPDATE = "permissions.update"
+    PERMISSIONS_DELETE = "permissions.delete"
+
+    PROFILE_PERMISSIONS_READ = "profile_permissions.read"
+    PROFILE_PERMISSIONS_MANAGE = "profile_permissions.manage"

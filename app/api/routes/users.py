@@ -6,6 +6,8 @@ from app.core.permissions import PermissionNames
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.core.authorization import require_permission
+from app.core.permissions import PermissionNames
 from app.services.user_service import (
     UserAlreadyExistsError,
     UserService,
@@ -26,6 +28,11 @@ router = APIRouter(
 def create_user(
     data: UserCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission(
+            PermissionNames.USERS_CREATE
+        )
+    ),
 ) -> User:
 
     service = UserService(db)
