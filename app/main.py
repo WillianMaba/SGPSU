@@ -9,6 +9,7 @@ from app.api.routes.permissions import router as permissions_router
 from app.api.routes.profile_permissions import (
     router as profile_permissions_router,
 )
+from app.api.routes.tickets import router as tickets_router
 
 
 app = FastAPI(
@@ -24,6 +25,7 @@ app.include_router(sectors_router)
 app.include_router(profiles_router)
 app.include_router(permissions_router)
 app.include_router(profile_permissions_router)
+app.include_router(tickets_router)
 
 
 @app.get("/")

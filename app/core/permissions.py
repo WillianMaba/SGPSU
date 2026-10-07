@@ -21,3 +21,7 @@ class PermissionNames:
 
     PROFILE_PERMISSIONS_READ = "profile_permissions.read"
     PROFILE_PERMISSIONS_MANAGE = "profile_permissions.manage"
+
+    TICKETS_READ = "tickets.read"
+    TICKETS_CREATE = "tickets.create"
+    TICKETS_UPDATE = "tickets.update"
