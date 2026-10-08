@@ -10,6 +10,11 @@ from app.api.routes.profile_permissions import (
     router as profile_permissions_router,
 )
 from app.api.routes.tickets import router as tickets_router
+from app.api.routes.ticket_comments import router as ticket_comments_router
+from app.api.routes.ticket_history import router as ticket_history_router
+from app.api.routes.ticket_attachments import (
+    router as ticket_attachments_router,
+)
 
 
 app = FastAPI(
@@ -26,6 +31,9 @@ app.include_router(profiles_router)
 app.include_router(permissions_router)
 app.include_router(profile_permissions_router)
 app.include_router(tickets_router)
+app.include_router(ticket_comments_router)
+app.include_router(ticket_history_router)
+app.include_router(ticket_attachments_router)
 
 
 @app.get("/")

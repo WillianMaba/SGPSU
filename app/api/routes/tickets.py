@@ -10,6 +10,14 @@ from app.services.ticket_service import (
     TicketReferenceNotFoundError,
     TicketService,
 )
+from app.core.authorization import require_permission
+from app.core.permissions import PermissionNames
+from app.services.authorization_service import AuthorizationService
+from app.services.ticket_service import (
+    TicketInvalidUpdateError,
+    TicketReferenceNotFoundError,
+    TicketService,
+)
 
 
 router = APIRouter(
@@ -114,13 +122,12 @@ def update_ticket(
     data: TicketUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission(
-            PermissionNames.TICKETS_UPDATE
-        )
+        require_permission(PermissionNames.TICKETS_UPDATE)
     ),
 ) -> TicketRead:
 
     service = TicketService(db)
+
 
     ticket = service.get_ticket(ticket_id)
 
@@ -130,15 +137,45 @@ def update_ticket(
             detail="Chamado nao encontrado.",
         )
 
+    values = data.model_dump(exclude_unset=True)
+
+    
+    if "assignee_id" in values:
+        authorization_service = AuthorizationService(db)
+
+        can_assign = authorization_service.has_permission(
+            user=current_user,
+            permission_name=PermissionNames.TICKETS_ASSIGN,
+        )
+
+        if not can_assign:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Usuario nao possui permissao "
+                    "para atribuir chamados."
+                ),
+            )
+
+    
     try:
         updated_ticket = service.update_ticket(
             ticket=ticket,
             data=data,
+            changed_by_id=current_user.id,
         )
 
         db.commit()
 
         return updated_ticket
+
+    except TicketInvalidUpdateError as exc:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
 
     except TicketReferenceNotFoundError as exc:
         db.rollback()
@@ -153,5 +190,8 @@ def update_ticket(
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Os dados informados violam uma regra de integridade do banco.",
+            detail=(
+                "Os dados informados violam uma regra "
+                "de integridade do banco."
+            ),
         ) from exc

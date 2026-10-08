@@ -18,3 +18,6 @@ __pycache__/
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
+
+# Arquivos enviados pelos usuários
+storage/

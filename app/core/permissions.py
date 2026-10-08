@@ -25,3 +25,7 @@ class PermissionNames:
     TICKETS_READ = "tickets.read"
     TICKETS_CREATE = "tickets.create"
     TICKETS_UPDATE = "tickets.update"
+    TICKETS_COMMENT = "tickets.comment"
+    TICKETS_HISTORY_READ = "tickets.history.read"
+    TICKETS_ASSIGN = "tickets.assign"
+    TICKETS_ATTACH = "tickets.attach"
