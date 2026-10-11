@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from app.models.ticket import Ticket
 from app.models.ticket_category import TicketCategory
 from app.models.ticket_history import TicketHistory
@@ -68,6 +69,15 @@ class TicketService:
             priority_id=data.priority_id,
             category_id=data.category_id,
             assignee_id=data.assignee_id,
+        )
+        initial_status = self.db.get(
+            TicketStatus,
+            data.status_id,
+        )
+
+        if initial_status.name != "Aberto":
+            raise TicketInvalidTransitionError(
+                "Todo chamado deve ser criado com status Aberto."
         )
 
         ticket = self.repository.create(
@@ -175,3 +185,112 @@ class TicketService:
         )
 
         return updated_ticket
+    
+    def _change_status(
+        self,
+        ticket_id: int,
+        user_id: int,
+        allowed_current_statuses: set[str],
+        target_status_name: str,
+        action: str,
+        description: str,
+    ) -> Ticket:
+
+            ticket = self.repository.get_by_id(ticket_id)
+
+            if ticket is None:
+                raise TicketNotFoundError(
+                    "Chamado nao encontrado."
+                )
+
+            current_status = self.db.get(
+                TicketStatus,
+                ticket.status_id,
+            )
+
+            if (
+                current_status is None
+                or current_status.name not in allowed_current_statuses
+            ):
+                raise TicketInvalidTransitionError(
+                    "O status atual nao permite esta operacao."
+                )
+
+            statement = select(TicketStatus).where(
+                TicketStatus.name == target_status_name,
+                TicketStatus.is_active.is_(True),
+            )
+
+            target_status = self.db.scalar(statement)
+
+            if target_status is None:
+                raise TicketInvalidTransitionError(
+                    "O status de destino nao existe ou esta inativo."
+                )
+
+            ticket.status_id = target_status.id
+
+            self.db.add(ticket)
+            self.db.flush()
+            self.db.refresh(ticket)
+
+            self.history_repository.create(
+                ticket_id=ticket.id,
+                user_id=user_id,
+                action=action,
+                description=description,
+            )
+
+            return ticket
+
+    def start_ticket(
+        self,
+        ticket_id: int,
+        user_id: int,
+    ) -> Ticket:
+
+        return self._change_status(
+            ticket_id=ticket_id,
+            user_id=user_id,
+            allowed_current_statuses={"Aberto", "Reaberto"},
+            target_status_name="Em andamento",
+            action="started",
+            description="Atendimento do chamado iniciado.",
+        )
+
+    def resolve_ticket(
+        self,
+        ticket_id: int,
+        user_id: int,
+    ) -> Ticket:
+
+        return self._change_status(
+            ticket_id=ticket_id,
+            user_id=user_id,
+            allowed_current_statuses={"Em andamento"},
+            target_status_name="Resolvido",
+            action="resolved",
+            description="Chamado marcado como resolvido.",
+        )
+
+    def reopen_ticket(
+        self,
+        ticket_id: int,
+        user_id: int,
+    ) -> Ticket:
+
+        return self._change_status(
+            ticket_id=ticket_id,
+            user_id=user_id,
+            allowed_current_statuses={"Resolvido"},
+            target_status_name="Reaberto",
+            action="reopened",
+            description="Chamado reaberto para novo atendimento.",
+        )
+
+class TicketNotFoundError(Exception):
+    pass
+
+
+class TicketInvalidTransitionError(Exception):
+    pass

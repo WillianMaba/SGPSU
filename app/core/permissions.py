@@ -29,3 +29,5 @@ class PermissionNames:
     TICKETS_HISTORY_READ = "tickets.history.read"
     TICKETS_ASSIGN = "tickets.assign"
     TICKETS_ATTACH = "tickets.attach"
+    TICKETS_RESOLVE = "tickets.resolve"
+    TICKETS_REOPEN = "tickets.reopen"

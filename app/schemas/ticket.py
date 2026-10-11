@@ -12,16 +12,19 @@ class TicketCreate(BaseModel):
 
 
 class TicketUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     title: str | None = Field(
         default=None,
         min_length=3,
         max_length=200,
     )
+
     description: str | None = Field(
         default=None,
         min_length=1,
     )
-    status_id: int | None = None
+
     priority_id: int | None = None
     category_id: int | None = None
     assignee_id: int | None = None

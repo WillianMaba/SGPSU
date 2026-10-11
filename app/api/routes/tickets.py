@@ -6,10 +6,6 @@ from app.core.permissions import PermissionNames
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ticket import TicketCreate, TicketRead, TicketUpdate
-from app.services.ticket_service import (
-    TicketReferenceNotFoundError,
-    TicketService,
-)
 from app.core.authorization import require_permission
 from app.core.permissions import PermissionNames
 from app.services.authorization_service import AuthorizationService
@@ -35,9 +31,7 @@ def create_ticket(
     data: TicketCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission(
-            PermissionNames.TICKETS_CREATE
-        )
+        require_permission(PermissionNames.TICKETS_CREATE)
     ),
 ) -> TicketRead:
 
@@ -53,6 +47,14 @@ def create_ticket(
 
         return ticket
 
+    except TicketInvalidTransitionError as exc:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
     except TicketReferenceNotFoundError as exc:
         db.rollback()
 
@@ -66,9 +68,11 @@ def create_ticket(
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Os dados informados violam uma regra de integridade do banco.",
+            detail=(
+                "Os dados informados violam uma regra "
+                "de integridade do banco."
+            ),
         ) from exc
-
 
 @router.get(
     "/",
