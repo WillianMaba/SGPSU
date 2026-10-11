@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from app.api.routes.auth import get_current_user
 from app.core.authorization import require_permission
 from app.core.permissions import PermissionNames
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ticket import TicketCreate, TicketRead, TicketUpdate
-from app.core.authorization import require_permission
-from app.core.permissions import PermissionNames
 from app.services.authorization_service import AuthorizationService
+from app.services.ticket_access_service import TicketAccessService
 from app.services.ticket_service import (
+    TicketInvalidTransitionError,
     TicketInvalidUpdateError,
     TicketReferenceNotFoundError,
     TicketService,
@@ -21,6 +22,8 @@ router = APIRouter(
     tags=["Tickets"],
 )
 
+
+# CRIAR CHAMADO
 
 @router.post(
     "/",
@@ -34,6 +37,21 @@ def create_ticket(
         require_permission(PermissionNames.TICKETS_CREATE)
     ),
 ) -> TicketRead:
+
+    if data.assignee_id is not None:
+        authorization = AuthorizationService(db)
+
+        if not authorization.has_permission(
+            current_user,
+            PermissionNames.TICKETS_ASSIGN,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Usuario nao possui permissao "
+                    "para atribuir chamados."
+                ),
+            )
 
     service = TicketService(db)
 
@@ -68,11 +86,11 @@ def create_ticket(
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Os dados informados violam uma regra "
-                "de integridade do banco."
-            ),
+            detail="Os dados informados violam uma regra de integridade do banco.",
         ) from exc
+
+
+# LISTAR CHAMADOS
 
 @router.get(
     "/",
@@ -81,14 +99,26 @@ def create_ticket(
 def list_tickets(
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission(
-            PermissionNames.TICKETS_READ
-        )
+        require_permission(PermissionNames.TICKETS_READ)
     ),
 ) -> list[TicketRead]:
 
-    return TicketService(db).get_tickets()
+    service = TicketService(db)
 
+    authorization = AuthorizationService(db)
+
+    if authorization.has_permission(
+        current_user,
+        PermissionNames.TICKETS_READ_ALL,
+    ):
+        return service.get_tickets()
+
+    return service.repository.list_visible_to_user(
+        current_user.id,
+    )
+
+
+# CONSULTAR CHAMADO POR ID
 
 @router.get(
     "/{ticket_id}",
@@ -97,16 +127,10 @@ def list_tickets(
 def get_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        require_permission(
-            PermissionNames.TICKETS_READ
-        )
-    ),
+    current_user: User = Depends(get_current_user),
 ) -> TicketRead:
 
-    ticket = TicketService(db).get_ticket(
-        ticket_id,
-    )
+    ticket = TicketService(db).get_ticket(ticket_id)
 
     if ticket is None:
         raise HTTPException(
@@ -114,8 +138,15 @@ def get_ticket(
             detail="Chamado nao encontrado.",
         )
 
+    TicketAccessService(db).require_read(
+        user=current_user,
+        ticket=ticket,
+    )
+
     return ticket
 
+
+# ATUALIZAR CHAMADO
 
 @router.patch(
     "/{ticket_id}",
@@ -125,13 +156,10 @@ def update_ticket(
     ticket_id: int,
     data: TicketUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        require_permission(PermissionNames.TICKETS_UPDATE)
-    ),
+    current_user: User = Depends(get_current_user),
 ) -> TicketRead:
 
     service = TicketService(db)
-
 
     ticket = service.get_ticket(ticket_id)
 
@@ -141,13 +169,20 @@ def update_ticket(
             detail="Chamado nao encontrado.",
         )
 
+    # Verifica se o usuario pode editar ESTE chamado.
+    TicketAccessService(db).require_update(
+        user=current_user,
+        ticket=ticket,
+    )
+
     values = data.model_dump(exclude_unset=True)
 
-    
+    # Alterar o responsavel exige uma permissao adicional.
     if "assignee_id" in values:
-        authorization_service = AuthorizationService(db)
 
-        can_assign = authorization_service.has_permission(
+        authorization = AuthorizationService(db)
+
+        can_assign = authorization.has_permission(
             user=current_user,
             permission_name=PermissionNames.TICKETS_ASSIGN,
         )
@@ -161,7 +196,6 @@ def update_ticket(
                 ),
             )
 
-    
     try:
         updated_ticket = service.update_ticket(
             ticket=ticket,

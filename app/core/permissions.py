@@ -31,3 +31,5 @@ class PermissionNames:
     TICKETS_ATTACH = "tickets.attach"
     TICKETS_RESOLVE = "tickets.resolve"
     TICKETS_REOPEN = "tickets.reopen"
+    TICKETS_READ_ALL = "tickets.read_all"
+    TICKETS_UPDATE_ALL = "tickets.update_all"

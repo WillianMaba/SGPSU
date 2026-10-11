@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 from app.models.ticket import Ticket
 from app.schemas.ticket import TicketCreate, TicketUpdate
@@ -64,3 +64,23 @@ class TicketRepository:
         self.db.refresh(ticket)
 
         return ticket
+    
+    def list_visible_to_user(
+        self,
+        user_id: int,
+    ) -> list[Ticket]:
+
+        statement = (
+            select(Ticket)
+            .where(
+                or_(
+                    Ticket.requester_id == user_id,
+                    Ticket.assignee_id == user_id,
+                )
+            )
+            .order_by(Ticket.id.desc())
+        )
+
+        return list(
+            self.db.scalars(statement).all()
+        )
