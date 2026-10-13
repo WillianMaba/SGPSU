@@ -21,3 +21,6 @@ Thumbs.db
 
 # Arquivos enviados pelos usuários
 storage/
+
+# Variaveis de ambiente dos testes
+.env.test
