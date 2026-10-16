@@ -1,17 +1,23 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from app.models.ticket import Ticket
 from app.models.ticket_category import TicketCategory
-from app.models.ticket_history import TicketHistory
 from app.models.ticket_priority import TicketPriority
 from app.models.ticket_status import TicketStatus
 from app.models.user import User
+
 from app.repositories.ticket_repository import TicketRepository
 from app.repositories.ticket_history_repository import (
     TicketHistoryRepository,
 )
+
 from app.schemas.ticket import TicketCreate, TicketUpdate
 
+
+# ============================================================
+# EXCECOES DE NEGOCIO
+# ============================================================
 
 class TicketReferenceNotFoundError(Exception):
     pass
@@ -21,11 +27,31 @@ class TicketInvalidUpdateError(Exception):
     pass
 
 
+class TicketNotFoundError(Exception):
+    pass
+
+
+class TicketInvalidTransitionError(Exception):
+    pass
+
+
+# ============================================================
+# SERVICE DE CHAMADOS
+# ============================================================
+
 class TicketService:
+
     def __init__(self, db: Session):
+
         self.db = db
+
         self.repository = TicketRepository(db)
+
         self.history_repository = TicketHistoryRepository(db)
+
+    # --------------------------------------------------------
+    # VALIDAR REFERENCIAS
+    # --------------------------------------------------------
 
     def _validate_references(
         self,
@@ -34,42 +60,66 @@ class TicketService:
         category_id: int,
         assignee_id: int | None,
     ) -> None:
-        status = self.db.get(TicketStatus, status_id)
+
+        status = self.db.get(
+            TicketStatus,
+            status_id,
+        )
+
         if status is None or not status.is_active:
             raise TicketReferenceNotFoundError(
                 "Status do chamado nao encontrado ou inativo."
             )
 
-        priority = self.db.get(TicketPriority, priority_id)
+        priority = self.db.get(
+            TicketPriority,
+            priority_id,
+        )
+
         if priority is None or not priority.is_active:
             raise TicketReferenceNotFoundError(
                 "Prioridade do chamado nao encontrada ou inativa."
             )
 
-        category = self.db.get(TicketCategory, category_id)
+        category = self.db.get(
+            TicketCategory,
+            category_id,
+        )
+
         if category is None or not category.is_active:
             raise TicketReferenceNotFoundError(
                 "Categoria do chamado nao encontrada ou inativa."
             )
 
         if assignee_id is not None:
-            assignee = self.db.get(User, assignee_id)
+
+            assignee = self.db.get(
+                User,
+                assignee_id,
+            )
+
             if assignee is None or not assignee.is_active:
                 raise TicketReferenceNotFoundError(
                     "Responsavel pelo chamado nao encontrado ou inativo."
                 )
+
+    # --------------------------------------------------------
+    # CRIAR CHAMADO
+    # --------------------------------------------------------
 
     def create_ticket(
         self,
         data: TicketCreate,
         requester_id: int,
     ) -> Ticket:
+
         self._validate_references(
             status_id=data.status_id,
             priority_id=data.priority_id,
             category_id=data.category_id,
             assignee_id=data.assignee_id,
         )
+
         initial_status = self.db.get(
             TicketStatus,
             data.status_id,
@@ -78,7 +128,7 @@ class TicketService:
         if initial_status.name != "Aberto":
             raise TicketInvalidTransitionError(
                 "Todo chamado deve ser criado com status Aberto."
-        )
+            )
 
         ticket = self.repository.create(
             data=data,
@@ -94,11 +144,28 @@ class TicketService:
 
         return ticket
 
-    def get_ticket(self, ticket_id: int) -> Ticket | None:
+    # --------------------------------------------------------
+    # CONSULTAR CHAMADO
+    # --------------------------------------------------------
+
+    def get_ticket(
+        self,
+        ticket_id: int,
+    ) -> Ticket | None:
+
         return self.repository.get_by_id(ticket_id)
 
+    # --------------------------------------------------------
+    # LISTAR CHAMADOS
+    # --------------------------------------------------------
+
     def get_tickets(self) -> list[Ticket]:
+
         return self.repository.list()
+
+    # --------------------------------------------------------
+    # ATUALIZAR CHAMADO
+    # --------------------------------------------------------
 
     def update_ticket(
         self,
@@ -106,7 +173,10 @@ class TicketService:
         data: TicketUpdate,
         changed_by_id: int,
     ) -> Ticket:
-        values = data.model_dump(exclude_unset=True)
+
+        values = data.model_dump(
+            exclude_unset=True,
+        )
 
         if not values:
             return ticket
@@ -114,34 +184,45 @@ class TicketService:
         required_fields = (
             "title",
             "description",
-            "status_id",
             "priority_id",
             "category_id",
         )
 
         for field in required_fields:
+
             if field in values and values[field] is None:
                 raise TicketInvalidUpdateError(
                     f"O campo {field} nao pode ser nulo."
                 )
 
         reference_models = {
-            "status_id": (TicketStatus, "Status"),
             "priority_id": (TicketPriority, "Prioridade"),
             "category_id": (TicketCategory, "Categoria"),
         }
 
         for field, (model, label) in reference_models.items():
+
             if field in values:
-                reference = self.db.get(model, values[field])
+
+                reference = self.db.get(
+                    model,
+                    values[field],
+                )
 
                 if reference is None or not reference.is_active:
                     raise TicketReferenceNotFoundError(
                         f"{label} do chamado nao encontrado ou inativo."
                     )
 
-        if "assignee_id" in values and values["assignee_id"] is not None:
-            assignee = self.db.get(User, values["assignee_id"])
+        if (
+            "assignee_id" in values
+            and values["assignee_id"] is not None
+        ):
+
+            assignee = self.db.get(
+                User,
+                values["assignee_id"],
+            )
 
             if assignee is None or not assignee.is_active:
                 raise TicketReferenceNotFoundError(
@@ -151,7 +232,6 @@ class TicketService:
         labels = {
             "title": "titulo",
             "description": "descricao",
-            "status_id": "status",
             "priority_id": "prioridade",
             "category_id": "categoria",
             "assignee_id": "responsavel",
@@ -171,21 +251,36 @@ class TicketService:
             data=data,
         )
 
-        is_assignment_only = changed_fields == ["assignee_id"]
+        is_assignment_only = (
+            changed_fields == ["assignee_id"]
+        )
 
-        description = "Campos alterados: " + ", ".join(
-            labels[field] for field in changed_fields
-        ) + "."
+        description = (
+            "Campos alterados: "
+            + ", ".join(
+                labels[field]
+                for field in changed_fields
+            )
+            + "."
+        )
 
         self.history_repository.create(
             ticket_id=ticket.id,
             user_id=changed_by_id,
-            action="assigned" if is_assignment_only else "updated",
+            action=(
+                "assigned"
+                if is_assignment_only
+                else "updated"
+            ),
             description=description,
         )
 
         return updated_ticket
-    
+
+    # --------------------------------------------------------
+    # ALTERAR STATUS DO CHAMADO
+    # --------------------------------------------------------
+
     def _change_status(
         self,
         ticket_id: int,
@@ -196,52 +291,60 @@ class TicketService:
         description: str,
     ) -> Ticket:
 
-            ticket = self.repository.get_by_id(ticket_id)
+        ticket = self.repository.get_by_id(
+            ticket_id
+        )
 
-            if ticket is None:
-                raise TicketNotFoundError(
-                    "Chamado nao encontrado."
-                )
-
-            current_status = self.db.get(
-                TicketStatus,
-                ticket.status_id,
+        if ticket is None:
+            raise TicketNotFoundError(
+                "Chamado nao encontrado."
             )
 
-            if (
-                current_status is None
-                or current_status.name not in allowed_current_statuses
-            ):
-                raise TicketInvalidTransitionError(
-                    "O status atual nao permite esta operacao."
-                )
+        current_status = self.db.get(
+            TicketStatus,
+            ticket.status_id,
+        )
 
-            statement = select(TicketStatus).where(
-                TicketStatus.name == target_status_name,
-                TicketStatus.is_active.is_(True),
+        if (
+            current_status is None
+            or current_status.name not in allowed_current_statuses
+        ):
+            raise TicketInvalidTransitionError(
+                "O status atual nao permite esta operacao."
             )
 
-            target_status = self.db.scalar(statement)
+        statement = select(TicketStatus).where(
+            TicketStatus.name == target_status_name,
+            TicketStatus.is_active.is_(True),
+        )
 
-            if target_status is None:
-                raise TicketInvalidTransitionError(
-                    "O status de destino nao existe ou esta inativo."
-                )
+        target_status = self.db.scalar(
+            statement
+        )
 
-            ticket.status_id = target_status.id
-
-            self.db.add(ticket)
-            self.db.flush()
-            self.db.refresh(ticket)
-
-            self.history_repository.create(
-                ticket_id=ticket.id,
-                user_id=user_id,
-                action=action,
-                description=description,
+        if target_status is None:
+            raise TicketInvalidTransitionError(
+                "O status de destino nao existe ou esta inativo."
             )
 
-            return ticket
+        ticket.status_id = target_status.id
+
+        self.db.add(ticket)
+        self.db.flush()
+        self.db.refresh(ticket)
+
+        self.history_repository.create(
+            ticket_id=ticket.id,
+            user_id=user_id,
+            action=action,
+            description=description,
+        )
+
+        return ticket
+
+    # --------------------------------------------------------
+    # INICIAR ATENDIMENTO
+    # --------------------------------------------------------
 
     def start_ticket(
         self,
@@ -252,11 +355,18 @@ class TicketService:
         return self._change_status(
             ticket_id=ticket_id,
             user_id=user_id,
-            allowed_current_statuses={"Aberto", "Reaberto"},
+            allowed_current_statuses={
+                "Aberto",
+                "Reaberto",
+            },
             target_status_name="Em andamento",
             action="started",
             description="Atendimento do chamado iniciado.",
         )
+
+    # --------------------------------------------------------
+    # RESOLVER CHAMADO
+    # --------------------------------------------------------
 
     def resolve_ticket(
         self,
@@ -267,11 +377,17 @@ class TicketService:
         return self._change_status(
             ticket_id=ticket_id,
             user_id=user_id,
-            allowed_current_statuses={"Em andamento"},
+            allowed_current_statuses={
+                "Em andamento",
+            },
             target_status_name="Resolvido",
             action="resolved",
             description="Chamado marcado como resolvido.",
         )
+
+    # --------------------------------------------------------
+    # REABRIR CHAMADO
+    # --------------------------------------------------------
 
     def reopen_ticket(
         self,
@@ -282,15 +398,10 @@ class TicketService:
         return self._change_status(
             ticket_id=ticket_id,
             user_id=user_id,
-            allowed_current_statuses={"Resolvido"},
+            allowed_current_statuses={
+                "Resolvido",
+            },
             target_status_name="Reaberto",
             action="reopened",
             description="Chamado reaberto para novo atendimento.",
         )
-
-class TicketNotFoundError(Exception):
-    pass
-
-
-class TicketInvalidTransitionError(Exception):
-    pass
