@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 
 from tests.integration.database_guard import validate_test_database
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+
 
 # ============================================================
 # PROTECAO DO AMBIENTE DE TESTES
@@ -85,11 +88,18 @@ def test_engine():
                 text("SELECT version_num FROM public.alembic_version")
             ).scalar_one_or_none()
 
-            if revision != "f01ed27af4b0":
+            alembic_config = Config("alembic.ini")
+            script = ScriptDirectory.from_config(alembic_config)
+
+            expected_revision = script.get_current_head()
+
+            if revision != expected_revision:
                 raise RuntimeError(
-                    "O banco sgpsu_test nao esta na revisao esperada. "
-                    f"Revisao encontrada: {revision}"
-                )
+                    "O banco de testes nao esta atualizado. "
+                    f"Esperado: {expected_revision}. Encontrado: {revision}"
+    )    
+                
+            
 
         yield engine
 

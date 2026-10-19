@@ -11,16 +11,18 @@ if TYPE_CHECKING:
     from app.models.process_stage_history import ProcessStageHistory
 
 
-__table_args__ = (
+
+
+class ProcessStage(Base):
+    __tablename__ = "process_stages"
+    
+    __table_args__ = (
     UniqueConstraint(
         "process_id",
         "sequence",
         name="uq_process_stages_process_sequence",
     ),
 )
-
-class ProcessStage(Base):
-    __tablename__ = "process_stages"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,

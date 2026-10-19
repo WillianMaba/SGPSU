@@ -33,3 +33,10 @@ class PermissionNames:
     TICKETS_REOPEN = "tickets.reopen"
     TICKETS_READ_ALL = "tickets.read_all"
     TICKETS_UPDATE_ALL = "tickets.update_all"
+    
+    PROCESSES_CREATE = "processes.create"
+    PROCESSES_READ = "processes.read"
+    PROCESSES_READ_ALL = "processes.read_all"
+    PROCESSES_UPDATE = "processes.update"
+    PROCESSES_UPDATE_ALL = "processes.update_all"
+    PROCESSES_ASSIGN = "processes.assign"
