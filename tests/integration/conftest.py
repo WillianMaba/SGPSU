@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from tests.integration.database_guard import validate_test_database
+from tests.integration.process_fixtures import process_scenario
 
 from alembic.config import Config
 from alembic.script import ScriptDirectory
