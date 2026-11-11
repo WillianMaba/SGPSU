@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.document import Document
     from app.models.user import User
+    from app.models.file_version import FileVersion
 
 
 class DocumentVersion(Base):
@@ -61,3 +62,11 @@ class DocumentVersion(Base):
         foreign_keys=[created_by_id],
         back_populates="created_document_versions",
     )
+
+    file_version_id: Mapped[int | None] = mapped_column(
+        ForeignKey("file_versions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    file_version: Mapped["FileVersion | None"] = relationship()
