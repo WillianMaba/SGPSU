@@ -26,6 +26,7 @@ from app.api.routes.process_stages import (
     router as process_stages_router,
 )
 from app.api.routes.tasks import router as tasks_router
+from app.api.routes.repositories import router as repositories_router
 
 app = FastAPI(
     title="SGPSU",
@@ -49,6 +50,7 @@ app.include_router(processes_router)
 app.include_router(process_progress_router)
 app.include_router(process_stages_router)
 app.include_router(tasks_router)
+app.include_router(repositories_router)
 
 @app.get("/")
 def root():
