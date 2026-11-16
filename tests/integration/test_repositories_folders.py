@@ -3,6 +3,7 @@ import pytest
 from app.core.permissions import PermissionNames
 from app.models.permission import Permission
 from app.models.profile_permission import ProfilePermission
+from app.models.repository_access import RepositoryAccess
 
 
 @pytest.fixture
@@ -209,3 +210,129 @@ def test_folder_cannot_be_moved_inside_its_descendant(
     )
 
     assert response.status_code == 422
+
+def test_creator_can_list_root_and_child_folders(
+    client,
+    repository_scenario,
+):
+    token = repository_scenario["creator_token"]
+    repository = create_repository(client, token)
+
+    root_response = client.post(
+        f"/repositories/{repository['id']}/folders",
+        headers=auth(token),
+        json={"name": "Documentos"},
+    )
+    assert root_response.status_code == 201, root_response.text
+    root = root_response.json()
+
+    child_response = client.post(
+        f"/repositories/{repository['id']}/folders",
+        headers=auth(token),
+        json={
+            "name": "Contratos",
+            "parent_folder_id": root["id"],
+        },
+    )
+    assert child_response.status_code == 201, child_response.text
+
+    root_list = client.get(
+        f"/repositories/{repository['id']}/folders",
+        headers=auth(token),
+    )
+
+    assert root_list.status_code == 200
+    assert [folder["id"] for folder in root_list.json()] == [root["id"]]
+
+    child_list = client.get(
+        f"/repositories/{repository['id']}/folders",
+        params={"parent_folder_id": root["id"]},
+        headers=auth(token),
+    )
+
+    assert child_list.status_code == 200
+    assert len(child_list.json()) == 1
+    assert child_list.json()[0]["name"] == "Contratos"
+
+
+def test_creator_can_update_folder(
+    client,
+    repository_scenario,
+):
+    token = repository_scenario["creator_token"]
+    repository = create_repository(client, token)
+
+    folder_response = client.post(
+        f"/repositories/{repository['id']}/folders",
+        headers=auth(token),
+        json={"name": "Nome original"},
+    )
+    assert folder_response.status_code == 201, folder_response.text
+
+    folder_id = folder_response.json()["id"]
+
+    response = client.patch(
+        f"/repositories/{repository['id']}/folders/{folder_id}",
+        headers=auth(token),
+        json={"name": "Nome atualizado"},
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["name"] == "Nome atualizado"
+
+
+def test_explicit_deny_blocks_repository_read(
+    client,
+    db_session,
+    repository_scenario,
+):
+    creator_token = repository_scenario["creator_token"]
+    other_user = repository_scenario["other_user"]
+
+    repository = create_repository(client, creator_token)
+
+    db_session.add(
+        RepositoryAccess(
+            repository_id=repository["id"],
+            user_id=other_user.id,
+            profile_id=None,
+            sector_id=None,
+            permission="READ",
+            effect="DENY",
+            is_active=True,
+        )
+    )
+    db_session.flush()
+
+    response = client.get(
+        f"/repositories/{repository['id']}",
+        headers=auth(repository_scenario["other_token"]),
+    )
+
+    assert response.status_code == 403
+
+
+def test_other_user_cannot_read_folder_without_acl(
+    client,
+    repository_scenario,
+):
+    creator_token = repository_scenario["creator_token"]
+    other_token = repository_scenario["other_token"]
+
+    repository = create_repository(client, creator_token)
+
+    folder_response = client.post(
+        f"/repositories/{repository['id']}/folders",
+        headers=auth(creator_token),
+        json={"name": "Restrita"},
+    )
+    assert folder_response.status_code == 201, folder_response.text
+
+    folder_id = folder_response.json()["id"]
+
+    response = client.get(
+        f"/repositories/{repository['id']}/folders/{folder_id}",
+        headers=auth(other_token),
+    )
+
+    assert response.status_code == 403

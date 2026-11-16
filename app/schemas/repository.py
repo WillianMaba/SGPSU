@@ -38,8 +38,6 @@ class RepositoryRead(BaseModel):
     name: str
     description: str | None
     is_active: bool
-    created_at: object
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-    
